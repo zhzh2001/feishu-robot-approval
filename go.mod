@@ -12,6 +12,8 @@ require (
 	github.com/swaggo/swag v1.8.10
 )
 
+replace github.com/YasyaKarasu/feishuapi => /home/paleshell/feishuapi
+
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.2.0 // indirect

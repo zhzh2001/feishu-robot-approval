@@ -1,13 +1,14 @@
 package approval
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 	"xlab-feishu-robot/config"
 	"xlab-feishu-robot/pkg/global"
+
+	"github.com/YasyaKarasu/feishuapi"
+	"github.com/sirupsen/logrus"
 )
 
 type ApprovalInfo struct {
@@ -18,27 +19,21 @@ type ApprovalInfo struct {
 	Expense string
 }
 
-func ApprovalInfoByInstance(instanceCode string) *ApprovalInfo {
-	resp := global.Cli.Request("get", "open-apis/approval/v4/instances/"+instanceCode, nil, nil, nil)
-	if resp["status"].(string) == "APPROVED" {
-		end_time := resp["end_time"].(string)
-		end_time_int, _ := strconv.ParseInt(end_time, 10, 64)
-		tm := time.Unix(end_time_int/1000, 0)
-		date := tm.Format("2006-01-02")
-		dept := resp["department_id"].(string)
+func ApprovalInfoByInstance(InstanceCode string) *ApprovalInfo {
+	info := global.Cli.ApprovalInstanceById(InstanceCode)
+	if info.Status == "APPROVED" {
+		date := info.EndTime.Format("2006-01-02")
+		dept := info.DepartmentId
 		if dept != "" {
 			dept = global.Cli.DepartmentGetInfoById(dept).Name
 		}
 		manager := ""
-		for _, v := range resp["timeline"].([]interface{}) {
-			if v.(map[string]interface{})["type"].(string) == "PASS" {
-				uid := v.(map[string]interface{})["open_id"].(string)
-				resp := global.Cli.Request("get", "open-apis/contact/v3/users/"+uid, nil, nil, nil)
-				manager = resp["user"].(map[string]interface{})["name"].(string)
+		for _, v := range info.Timeline {
+			if v.Type == "PASS" {
+				manager = global.Cli.UserInfoById(v.OpenId, feishuapi.OpenId).Name
 			}
 		}
-		var form []map[string]interface{}
-		json.Unmarshal([]byte(resp["form"].(string)), &form)
+		form := info.Form
 		detail := ""
 		expense := ""
 		for _, v := range form {
@@ -75,36 +70,20 @@ func ApprovalInfoByInstance(instanceCode string) *ApprovalInfo {
 	return nil
 }
 
-type ValueRange struct {
-	Range  string          `json:"range"`
-	Values [][]interface{} `json:"values"`
-}
-
-type AppendBody struct {
-	VRange ValueRange `json:"valueRange"`
-}
-
-type AppendBody2 struct {
-	VRanges []ValueRange `json:"valueRanges"`
-}
-
 func Receive(event map[string]any) {
-	var body AppendBody
-	body.VRange.Range = config.C.Token.SheetId + "!A3:A3"
-	body.VRange.Values = [][]interface{}{{"-1"}}
-	resp := global.Cli.Request("post", "open-apis/sheets/v2/spreadsheets/"+config.C.Token.SpreadSheetToken+"/values_append", nil, nil, body)
-	ranges := resp["tableRange"].(string)
+	ranges := global.Cli.SheetAppendData(config.C.Token.SpreadSheetToken, config.C.Token.SheetId, "A3:A3", [][]interface{}{{-1}})
 	var row int
 	fmt.Sscanf(strings.Split(ranges, "!")[1], "A%d", &row)
-	url := fmt.Sprintf("open-apis/sheets/v2/spreadsheets/%s/values/%s!A%d:I%d", config.C.Token.SpreadSheetToken, config.C.Token.SheetId, row-1, row-1)
-	resp = global.Cli.Request("get", url, nil, nil, nil)
-	values := resp["valueRange"].(map[string]interface{})["values"].([]interface{})
+	ranges = "A" + strconv.Itoa(row-1) + ":I" + strconv.Itoa(row-1)
+	values := global.Cli.SheetGetData(config.C.Token.SpreadSheetToken, config.C.Token.SheetId, ranges)
 	id := values[0].([]interface{})[0].(float64)
+	if id < 0 {
+		logrus.Warn("Spreadsheet layout is not correct, please check it.")
+		return
+	}
 	remain := values[0].([]interface{})[8].(float64)
 	ainfo := ApprovalInfoByInstance(event["instance_code"].(string))
 	expense, _ := strconv.ParseFloat(ainfo.Expense, 64)
-	var body2 ValueRange
-	body2.Range = config.C.Token.SheetId + "!A" + strconv.Itoa(row) + ":I" + strconv.Itoa(row)
-	body2.Values = [][]interface{}{{id + 1, "支出", ainfo.Date, ainfo.Dept, ainfo.Manager, ainfo.Detail, nil, -expense, remain - expense}}
-	global.Cli.Request("post", "open-apis/sheets/v2/spreadsheets/"+config.C.Token.SpreadSheetToken+"/values_batch_update", nil, nil, AppendBody2{VRanges: []ValueRange{body2}})
+	ranges = "A" + strconv.Itoa(row) + ":I" + strconv.Itoa(row)
+	global.Cli.SheetWriteData(config.C.Token.SpreadSheetToken, config.C.Token.SheetId, ranges, [][]interface{}{{id + 1, "支出", ainfo.Date, ainfo.Dept, ainfo.Manager, ainfo.Detail, nil, -expense, remain - expense}})
 }
