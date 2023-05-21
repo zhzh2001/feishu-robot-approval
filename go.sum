@@ -50,6 +50,8 @@ github.com/YasyaKarasu/feishuapi v1.1.0 h1:b+HA3re+eRWQ071zXOhBSYbkhwmXfeIB+cIYr
 github.com/YasyaKarasu/feishuapi v1.1.0/go.mod h1:sn5gDUIBia/nJ8youGp6wuz5nwAl0fbY0+y99VnUl7Y=
 github.com/YasyaKarasu/feishuapi v1.2.1 h1:VheNqFAtq9G0wwcqyz20uuA92p1Xf3MYIQcVg/wGI+4=
 github.com/YasyaKarasu/feishuapi v1.2.1/go.mod h1:sn5gDUIBia/nJ8youGp6wuz5nwAl0fbY0+y99VnUl7Y=
+github.com/YasyaKarasu/feishuapi v1.3.9 h1:zP2cqLAYtRlJPkZN16izfegCoaPMypaUxGeIiujGdpA=
+github.com/YasyaKarasu/feishuapi v1.3.9/go.mod h1:MZ2g4WAwDThmFpkFelHMbUaTLoS1/E5OfWWIhMOHYi8=
 github.com/agiledragon/gomonkey/v2 v2.3.1/go.mod h1:ap1AmDzcVOAz1YpeJ3TCzIgstoaWLA6jbbgxfB4w2iY=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.8.5 h1:kjX0/vo5acEQ/sinD/18SkA/lDDUk23F0RcaHvI7omc=

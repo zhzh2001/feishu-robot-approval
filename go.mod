@@ -3,7 +3,7 @@ module xlab-feishu-robot
 go 1.19
 
 require (
-	github.com/YasyaKarasu/feishuapi v1.2.1
+	github.com/YasyaKarasu/feishuapi v1.3.9
 	github.com/gin-gonic/gin v1.9.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.15.0
@@ -11,8 +11,6 @@ require (
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.8.10
 )
-
-replace github.com/YasyaKarasu/feishuapi => /home/paleshell/feishuapi
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
